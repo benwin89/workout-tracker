@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Workout Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#111827">
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --card-border: #2a2e37;
+    --text: #e8e9ec;
+    --muted: #9099a8;
+    --accent: #4ade80;
+    --accent-dim: #1f3d2a;
+    --danger: #f87171;
+    --tab-bg: #1a1d24;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    padding-bottom: 40px;
+  }
+  header {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    padding: 16px 16px 0 16px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  h1 {
+    font-size: 20px;
+    margin: 0 0 12px 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .tab {
+    flex: 1;
+    text-align: center;
+    padding: 10px 8px;
+    background: var(--tab-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px 10px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .tab.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    border-bottom: none;
+    background: #14181f;
+  }
+  main { padding: 12px 16px; }
+  .week-progress {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 4px 0 14px 0;
+  }
+  .day-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .day-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  .day-title { font-weight: 600; font-size: 15px; }
+  .day-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .day-check {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--card-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .day-check.done {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0f1115;
+  }
+  .day-body {
+    display: none;
+    padding: 0 16px 16px 16px;
+    border-top: 1px solid var(--card-border);
+  }
+  .day-body.open { display: block; }
+  .exercise {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .exercise:last-of-type { border-bottom: none; }
+  .ex-name { font-size: 14px; font-weight: 600; }
+  .ex-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .ex-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  .sets {
+    display: flex;
+    gap: 6px;
+  }
+  .set-box {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: #22262f;
+    color: var(--muted);
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .set-box.done {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .weight-input {
+    width: 72px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: #22262f;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .weight-label { font-size: 12px; color: var(--muted); }
+  .cardio-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .cardio-box {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 1px solid var(--card-border);
+    background: #22262f;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .cardio-box.done { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .complete-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: var(--accent);
+    color: #0f1115;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .complete-btn.done { background: #2a2e37; color: var(--muted); }
+  .rest-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    padding: 20px 16px 0 16px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>30-Day Workout Tracker</h1>
+  <div class="tabs">
+    <div class="tab" data-week="week1">Week 1</div>
+    <div class="tab" data-week="week2">Week 2</div>
+  </div>
+</header>
+
+<main>
+  <div class="week-progress" id="weekProgress"></div>
+  <div id="days"></div>
+</main>
+
+<footer>Progress is saved automatically on this device.</footer>
+
+<script>
+const DATA = {
+  week1: {
+    label: "Week 1 — Foundation (3 days/week)",
+    days: [
+      { id: "d1", label: "Day 1", sub: "Mon · Full Body + Cardio", exercises: exWeek1() },
+      { id: "d2", label: "Day 2", sub: "Wed · Full Body + Cardio", exercises: exWeek1() },
+      { id: "d3", label: "Day 3", sub: "Fri · Full Body + Cardio", exercises: exWeek1() },
+    ]
+  },
+  week2: {
+    label: "Week 2 — Add a Day (4 days/week)",
+    days: [
+      { id: "d1", label: "Day 1", sub: "Mon · Full Body + Cardio", exercises: exWeek2() },
+      { id: "d2", label: "Day 2", sub: "Tue · Full Body + Cardio", exercises: exWeek2() },
+      { id: "d3", label: "Day 3", sub: "Thu · Full Body + Cardio", exercises: exWeek2() },
+      { id: "d4", label: "Day 4", sub: "Fri · Full Body + Cardio", exercises: exWeek2() },
+    ]
+  }
+};
+
+function exWeek1() {
+  return [
+    { name: "Warm-up: Treadmill walk", type: "cardio", meta: "5 min, easy pace" },
+    { name: "Leg press machine", type: "strength", sets: 2, reps: "12-15", rest: "90 sec" },
+    { name: "Seated row machine", type: "strength", sets: 2, reps: "12-15", rest: "60-90 sec" },
+    { name: "Chest press machine", type: "strength", sets: 2, reps: "12-15", rest: "60-90 sec" },
+    { name: "Lat pulldown machine", type: "strength", sets: 2, reps: "12-15", rest: "60-90 sec" },
+    { name: "Hip adduction/abduction machine", type: "strength", sets: 2, reps: "15 each side", rest: "45-60 sec" },
+    { name: "Ab mat crunches", type: "strength", sets: 2, reps: "15", rest: "45-60 sec" },
+    { name: "Treadmill intervals", type: "cardio", meta: "1 min jog / 2 min walk x4 (~12 min)" },
+    { name: "Cool-down + stretch", type: "cardio", meta: "3-5 min" },
+  ];
+}
+
+function exWeek2() {
+  return [
+    { name: "Warm-up: Treadmill walk", type: "cardio", meta: "5 min, easy pace" },
+    { name: "Leg press machine", type: "strength", sets: 2, reps: "12-15", rest: "90 sec" },
+    { name: "Seated row machine", type: "strength", sets: 2, reps: "12-15", rest: "60-90 sec" },
+    { name: "Chest press machine", type: "strength", sets: 2, reps: "12-15", rest: "60-90 sec" },
+    { name: "Lat pulldown machine", type: "strength", sets: 2, reps: "12-15", rest: "60-90 sec" },
+    { name: "Hip adduction/abduction machine", type: "strength", sets: 2, reps: "15 each side", rest: "45-60 sec" },
+    { name: "Ab mat crunches", type: "strength", sets: 3, reps: "15", rest: "45-60 sec" },
+    { name: "Treadmill intervals", type: "cardio", meta: "1.5 min jog / 2 min walk x5 (~17.5 min)" },
+    { name: "Cool-down + stretch", type: "cardio", meta: "3-5 min" },
+  ];
+}
+
+const STORAGE_KEY = "wt_v1_state";
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+let currentWeek = localStorage.getItem("wt_v1_currentWeek") || "week1";
+let openDay = null;
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getDayState(weekId, dayId) {
+  const key = weekId + "_" + dayId;
+  if (!state[key]) state[key] = { complete: false, exercises: {} };
+  return state[key];
+}
+
+function getExState(weekId, dayId, exIndex) {
+  const ds = getDayState(weekId, dayId);
+  if (!ds.exercises[exIndex]) ds.exercises[exIndex] = { setsDone: [], weight: "", cardioDone: false };
+  return ds.exercises[exIndex];
+}
+
+function renderTabs() {
+  document.querySelectorAll(".tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.week === currentWeek);
+  });
+}
+
+function renderProgress() {
+  const week = DATA[currentWeek];
+  const doneCount = week.days.filter(d => getDayState(currentWeek, d.id).complete).length;
+  document.getElementById("weekProgress").textContent =
+    week.label + " — " + doneCount + "/" + week.days.length + " days complete";
+}
+
+function renderDays() {
+  const container = document.getElementById("days");
+  container.innerHTML = "";
+  const week = DATA[currentWeek];
+
+  week.days.forEach(day => {
+    const dayState = getDayState(currentWeek, day.id);
+    const card = document.createElement("div");
+    card.className = "day-card";
+
+    const head = document.createElement("div");
+    head.className = "day-head";
+    head.innerHTML = `
+      <div>
+        <div class="day-title">${day.label}</div>
+        <div class="day-sub">${day.sub}</div>
+      </div>
+      <div class="day-check ${dayState.complete ? "done" : ""}">${dayState.complete ? "✓" : ""}</div>
+    `;
+    head.addEventListener("click", () => {
+      const uid = currentWeek + "_" + day.id;
+      openDay = openDay === uid ? null : uid;
+      renderDays();
+    });
+
+    const body = document.createElement("div");
+    body.className = "day-body" + (openDay === (currentWeek + "_" + day.id) ? " open" : "");
+
+    day.exercises.forEach((ex, i) => {
+      const exState = getExState(currentWeek, day.id, i);
+      const exDiv = document.createElement("div");
+      exDiv.className = "exercise";
+
+      if (ex.type === "cardio") {
+        exDiv.innerHTML = `
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-meta">${ex.meta}</div>
+          <div class="cardio-check">
+            <div class="cardio-box ${exState.cardioDone ? "done" : ""}" data-ex="${i}">${exState.cardioDone ? "✓" : ""}</div>
+            <span class="weight-label">Mark done</span>
+          </div>
+        `;
+        exDiv.querySelector(".cardio-box").addEventListener("click", () => {
+          exState.cardioDone = !exState.cardioDone;
+          save();
+          renderDays();
+        });
+      } else {
+        let setsHtml = "";
+        for (let s = 0; s < ex.sets; s++) {
+          const done = !!exState.setsDone[s];
+          setsHtml += `<div class="set-box ${done ? "done" : ""}" data-ex="${i}" data-set="${s}">${done ? "✓" : s + 1}</div>`;
+        }
+        exDiv.innerHTML = `
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-meta">${ex.sets} sets x ${ex.reps} reps</div>
+          <div class="ex-row">
+            <div class="sets">${setsHtml}</div>
+            <span class="weight-label">lb</span>
+            <input class="weight-input" type="number" inputmode="decimal" placeholder="wt" value="${exState.weight}" data-ex="${i}">
+          </div>
+          <div class="rest-note">Rest ${ex.rest} between sets</div>
+        `;
+        exDiv.querySelectorAll(".set-box").forEach(box => {
+          box.addEventListener("click", () => {
+            const s = parseInt(box.dataset.set);
+            exState.setsDone[s] = !exState.setsDone[s];
+            save();
+            renderDays();
+          });
+        });
+        exDiv.querySelector(".weight-input").addEventListener("input", (e) => {
+          exState.weight = e.target.value;
+          save();
+        });
+      }
+
+      body.appendChild(exDiv);
+    });
+
+    const completeBtn = document.createElement("button");
+    completeBtn.className = "complete-btn" + (dayState.complete ? " done" : "");
+    completeBtn.textContent = dayState.complete ? "Day Complete ✓ (tap to undo)" : "Mark Day Complete";
+    completeBtn.addEventListener("click", () => {
+      dayState.complete = !dayState.complete;
+      save();
+      renderDays();
+      renderProgress();
+    });
+    body.appendChild(completeBtn);
+
+    card.appendChild(head);
+    card.appendChild(body);
+    container.appendChild(card);
+  });
+}
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    currentWeek = tab.dataset.week;
+    localStorage.setItem("wt_v1_currentWeek", currentWeek);
+    openDay = null;
+    renderTabs();
+    renderProgress();
+    renderDays();
+  });
+});
+
+renderTabs();
+renderProgress();
+renderDays();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

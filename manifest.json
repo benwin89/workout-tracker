@@ -1,0 +1,9 @@
+{
+  "name": "30-Day Workout Tracker",
+  "short_name": "Workout",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115"
+}
